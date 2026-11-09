@@ -1,0 +1,1607 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MemeRadar — Screening Meme Coin: Potensi Terbang vs Risiko Rugpull</title>
+<meta name="description" content="Screening meme coin on-chain: skor risiko rugpull dan potensi terbang dari likuiditas, keamanan kontrak, distribusi holder, dan momentum pasar. Tanpa API key.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2306080c'/%3E%3Cg fill='none' stroke='%2357f287' stroke-width='1.6'%3E%3Ccircle cx='16' cy='16' r='10' opacity='.4'/%3E%3Ccircle cx='16' cy='16' r='5.5' opacity='.7'/%3E%3Cpath d='M16 16 24 10' stroke-linecap='round'/%3E%3C/g%3E%3Ccircle cx='16' cy='16' r='2' fill='%2357f287'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#06080c; --bg2:#090d14; --panel:#0d121b; --panel2:#111823; --line:#1d2735;
+  --text:#e9eff7; --muted:#8b99ad; --dim:#5f6c7f;
+  --green:#57f287; --lime:#b6ff5c; --amber:#ffc857; --orange:#ff9843; --red:#ff4d67; --cyan:#57e6ff;
+  --mono:"JetBrains Mono","Cascadia Code",ui-monospace,SFMono-Regular,Consolas,monospace;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:16px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
+  background:
+    radial-gradient(900px 540px at 12% -8%,rgba(87,242,135,.10),transparent 62%),
+    radial-gradient(760px 460px at 92% -4%,rgba(87,230,255,.075),transparent 60%),
+    radial-gradient(600px 500px at 50% 110%,rgba(255,77,103,.05),transparent 70%);}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.022) 1px,transparent 1px);
+  background-size:52px 52px;
+  -webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 25%,transparent 78%);
+  mask-image:radial-gradient(ellipse at 50% 0%,#000 25%,transparent 78%);}
+::selection{background:rgba(87,242,135,.28);color:#fff}
+a{color:inherit;text-decoration:none}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.wrap{width:min(1180px,calc(100% - 40px));margin:0 auto}
+.mono{font-family:var(--mono)}
+.pos{color:var(--green)} .neg{color:var(--red)} .muted{color:var(--muted)} .dim{color:var(--dim)}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);background:rgba(6,8,12,.78);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;gap:28px;height:66px}
+.brand{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.brand svg{color:var(--green);filter:drop-shadow(0 0 8px rgba(87,242,135,.45))}
+.brand strong{font-family:var(--mono);font-size:15px;letter-spacing:.08em;line-height:1.1;display:block}
+.brand strong span{color:var(--green)}
+.brand small{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+.nav{display:flex;gap:4px;margin-left:auto;align-items:center}
+.nav a{font-size:13px;color:var(--muted);padding:8px 12px;border-radius:9px;transition:.15s}
+.nav a:hover{color:var(--text);background:rgba(255,255,255,.05)}
+.nav .count{display:inline-block;min-width:17px;padding:0 5px;border-radius:20px;background:rgba(87,242,135,.13);color:var(--green);font-family:var(--mono);font-size:10px;text-align:center;margin-left:4px}
+.live{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--green);border:1px solid rgba(87,242,135,.25);border-radius:30px;padding:6px 11px;background:rgba(87,242,135,.06)}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ---------- hero ---------- */
+.hero{padding:64px 0 30px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--green);text-transform:uppercase;margin:0 0 16px}
+.hero h1{font-size:clamp(2.15rem,5.4vw,3.9rem);line-height:1.02;letter-spacing:-.035em;margin:0 0 18px;font-weight:800}
+.hero h1 em{font-style:normal;color:var(--green);text-shadow:0 0 32px rgba(87,242,135,.35)}
+.hero .lede{max-width:660px;color:var(--muted);font-size:15.5px;margin:0 0 32px}
+.searchbox{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 8px 8px 16px;max-width:820px;transition:.18s;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.searchbox:focus-within{border-color:rgba(87,242,135,.5);box-shadow:0 0 0 4px rgba(87,242,135,.07),0 10px 40px rgba(0,0,0,.4)}
+.searchbox .prompt{font-family:var(--mono);color:var(--green);font-size:18px;line-height:1}
+.searchbox input{flex:1;min-width:0;background:none;border:0;outline:none;font-family:var(--mono);font-size:14px;padding:12px 4px;color:var(--text)}
+.searchbox input::placeholder{color:var(--dim)}
+.searchbox button{border:0;background:var(--green);color:#04170c;font-family:var(--mono);font-weight:800;font-size:12px;letter-spacing:.14em;padding:12px 22px;border-radius:9px;transition:.15s}
+.searchbox button:hover{background:#7bffa4;transform:translateY(-1px)}
+.quick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--dim);max-width:820px}
+.quick button{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--muted);font-family:var(--mono);font-size:11px;padding:5px 10px;border-radius:7px;transition:.15s}
+.quick button:hover{border-color:rgba(87,242,135,.45);color:var(--green)}
+.micro{font-size:11.5px;color:var(--dim);margin:14px 0 0}
+
+/* ---------- generic panels ---------- */
+.panel{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:var(--r)}
+.section{padding:54px 0 10px}
+.section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:20px;flex-wrap:wrap}
+.section-head h2{font-size:clamp(1.4rem,2.6vw,1.9rem);letter-spacing:-.02em;margin:0 0 4px}
+.section-head p{margin:0;color:var(--muted);font-size:13.5px;max-width:640px}
+.section-head .eyebrow{margin-bottom:8px}
+
+/* ---------- loading / error ---------- */
+.loading-panel{padding:60px 24px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:20px;min-height:320px;justify-content:center}
+.radar-anim{width:118px;height:118px;border-radius:50%;border:1px solid rgba(87,242,135,.35);position:relative;overflow:hidden;background:radial-gradient(circle,rgba(87,242,135,.10),transparent 70%);flex:0 0 auto}
+.radar-anim::before{content:"";position:absolute;inset:0;background:conic-gradient(from 0deg,transparent 0 68%,rgba(87,242,135,.5) 100%);animation:sweep 1.5s linear infinite}
+.radar-anim::after{content:"";position:absolute;inset:26%;border:1px solid rgba(87,242,135,.22);border-radius:50%}
+.radar-anim i{position:absolute;left:50%;top:50%;width:7px;height:7px;border-radius:50%;background:var(--green);transform:translate(-50%,-50%);box-shadow:0 0 12px var(--green)}
+@keyframes sweep{to{transform:rotate(360deg)}}
+.loading-panel p{margin:0;font-family:var(--mono);font-size:12.5px;color:var(--muted);letter-spacing:.02em}
+.load-bar{width:min(360px,80%);height:2px;background:var(--line);border-radius:2px;overflow:hidden}
+.load-bar i{display:block;height:100%;width:40%;background:linear-gradient(90deg,transparent,var(--green),transparent);animation:slide 1.4s infinite}
+@keyframes slide{0%{transform:translateX(-110%)}100%{transform:translateX(310%)}}
+.err{color:var(--red);font-family:var(--sans);font-size:14px;margin:0}
+.err-box{max-width:560px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.err-icon{width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,77,103,.4);background:rgba(255,77,103,.08);display:grid;place-items:center;color:var(--red);font-family:var(--mono);font-size:20px}
+
+/* ---------- result ---------- */
+#result{margin-top:26px}
+.result-top{padding:20px 22px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:16px}
+.token-avatar{width:54px;height:54px;border-radius:14px;object-fit:cover;background:var(--panel2);border:1px solid var(--line);flex:0 0 auto}
+.token-avatar.ph{display:grid;place-items:center;font-family:var(--mono);font-weight:800;color:var(--green);font-size:20px}
+.token-id{min-width:0;flex:1 1 260px}
+.badges{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:5px}
+.badge{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:5px;border:1px solid var(--line);color:var(--muted);background:rgba(255,255,255,.03)}
+.badge.chain{border-color:rgba(87,230,255,.28);color:var(--cyan)}
+.token-id h2{margin:0;font-size:22px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.token-id h2 span{font-size:13px;color:var(--muted);font-weight:500}
+.contract{display:flex;align-items:center;gap:7px;margin-top:4px;font-family:var(--mono);font-size:10.5px;color:var(--dim)}
+.contract code{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.icon-btn{border:0;background:none;color:var(--dim);padding:2px;display:grid;place-items:center;border-radius:4px}
+.icon-btn:hover{color:var(--green)}
+.price-block{margin-left:auto;text-align:right;flex:0 0 auto}
+.price-block b{display:block;font-family:var(--mono);font-size:24px;letter-spacing:-.02em}
+.price-block span{font-family:var(--mono);font-size:12px}
+.result-grid{display:grid;grid-template-columns:340px 1fr;gap:16px;align-items:start}
+.verdict-card{padding:24px 22px;border-radius:var(--r);border:1px solid var(--line);background:
+  radial-gradient(120% 90% at 50% 0%,color-mix(in srgb,var(--tone) 10%,transparent),transparent 65%),
+  linear-gradient(180deg,var(--panel),var(--bg2));
+  border-color:color-mix(in srgb,var(--tone) 26%,var(--line));position:sticky;top:84px;text-align:center}
+.verdict-card.tone-good{--tone:var(--green)} .verdict-card.tone-lime{--tone:var(--lime)}
+.verdict-card.tone-amber{--tone:var(--amber)} .verdict-card.tone-orange{--tone:var(--orange)}
+.verdict-card.tone-red{--tone:var(--red)}
+.gauge-wrap{position:relative;width:168px;height:168px;margin:4px auto 14px}
+.gauge{width:100%;height:100%;transform:rotate(-90deg)}
+.gauge .track{fill:none;stroke:#1a2432;stroke-width:9}
+.gauge .fill{fill:none;stroke:var(--tone);stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset .9s cubic-bezier(.2,.8,.2,1);filter:drop-shadow(0 0 7px color-mix(in srgb,var(--tone) 55%,transparent))}
+.gauge-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0}
+.gauge-center b{font-family:var(--mono);font-size:44px;line-height:1;letter-spacing:-.05em;color:var(--tone)}
+.gauge-center span{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--dim);margin-top:5px}
+.verdict-badge{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--tone);border:1px solid color-mix(in srgb,var(--tone) 40%,transparent);background:color-mix(in srgb,var(--tone) 9%,transparent);padding:7px 13px;border-radius:7px;text-transform:uppercase}
+.verdict-sub{font-size:12.5px;color:var(--muted);margin:11px 0 20px;line-height:1.5}
+.conf-head{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.06em;margin-bottom:6px}
+.conf-bar{height:4px;background:#16202d;border-radius:4px;overflow:hidden}
+.conf-bar i{display:block;height:100%;background:var(--cyan);border-radius:4px;transition:width .8s}
+.conf-note{font-size:10.5px;color:var(--dim);margin:8px 0 18px;line-height:1.4}
+.actions{display:flex;flex-direction:column;gap:8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font-family:var(--mono);font-size:11.5px;letter-spacing:.03em;padding:10px 14px;transition:.15s}
+.btn:hover{background:rgba(255,255,255,.08);border-color:#314055}
+.btn.primary{background:color-mix(in srgb,var(--tone) 14%,transparent);border-color:color-mix(in srgb,var(--tone) 40%,transparent);color:var(--tone)}
+.btn.primary:hover{background:color-mix(in srgb,var(--tone) 22%,transparent)}
+.btn.small{padding:7px 11px;font-size:10.5px}
+
+.report{padding:22px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:18px}
+.metric{background:var(--panel);padding:12px 14px}
+.metric span{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.13em;color:var(--dim);text-transform:uppercase;margin-bottom:4px}
+.metric b{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:-.01em}
+.summary-box{border-left:2px solid var(--green);background:rgba(87,242,135,.045);padding:13px 16px;border-radius:0 9px 9px 0;font-size:13.5px;color:#cfdae8;margin-bottom:20px;line-height:1.6}
+.summary-box strong{color:var(--text)}
+
+.flags{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.flag-col{background:rgba(255,255,255,.018);border:1px solid var(--line);border-radius:11px;padding:14px}
+.flag-col h4{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:7px}
+.flag-col.pos h4{color:var(--green)} .flag-col.neg h4{color:var(--red)}
+.flag-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.flag-list li{display:flex;gap:8px;font-size:12px;color:var(--muted);line-height:1.45}
+.flag-list li i{flex:0 0 auto;width:14px;height:14px;border-radius:50%;display:grid;place-items:center;font-size:8px;font-style:normal;margin-top:1px;font-family:var(--mono);font-weight:800}
+.flag-col.pos li i{background:rgba(87,242,135,.11);color:var(--green);border:1px solid rgba(87,242,135,.25)}
+.flag-col.neg li i{background:rgba(255,77,103,.1);color:var(--red);border:1px solid rgba(255,77,103,.25)}
+.flag-list b{color:#d5dfeb;font-weight:600}
+.flag-empty{font-size:12px;color:var(--dim);font-style:italic}
+
+.breakdown-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px}
+.breakdown-head h3{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin:0;font-weight:500}
+.sec{border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden;background:rgba(255,255,255,.014)}
+.sec summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:9px;padding:11px 14px;font-size:12.5px;user-select:none}
+.sec summary::-webkit-details-marker{display:none}
+.sec summary:hover{background:rgba(255,255,255,.025)}
+.sec summary .s-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.sec summary b{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted);font-weight:500}
+.sec summary .chev{color:var(--dim);font-family:var(--mono);font-size:13px;transition:.2s;width:12px;text-align:center}
+.sec[open] summary .chev{transform:rotate(45deg)}
+.checks{padding:2px 14px 10px}
+.check{display:grid;grid-template-columns:1fr 92px;gap:14px;align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,.045)}
+.check-txt{display:flex;gap:9px;align-items:flex-start;min-width:0}
+.c-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;margin-top:6px;background:var(--dim)}
+.c-dot.good{background:var(--green);box-shadow:0 0 6px rgba(87,242,135,.5)} .c-dot.warn{background:var(--amber)} .c-dot.bad{background:var(--red)} .c-dot.unknown{background:#3c4a5c}
+.check-txt p{margin:0;font-size:12px;line-height:1.35;color:#c9d5e4}
+.check-txt small{display:block;font-size:10.5px;color:var(--dim);margin-top:2px;line-height:1.35;overflow-wrap:anywhere}
+.c-bar{height:3px;background:#16202d;border-radius:3px;overflow:hidden}
+.c-bar i{display:block;height:100%;border-radius:3px;background:var(--green);transition:width .6s}
+.c-bar i.warn{background:var(--amber)} .c-bar i.bad{background:var(--red)} .c-bar i.unknown{background:#334156;width:100%!important;opacity:.5}
+
+.source-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line);font-size:10.5px;color:var(--dim)}
+.src{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;border:1px solid var(--line);padding:3px 7px;border-radius:5px;color:var(--muted)}
+.src i{width:5px;height:5px;border-radius:50%;background:var(--dim)}
+.src.ok i{background:var(--green)} .src.warn i{background:var(--amber)} .src.err i{background:var(--red)}
+.source-row .stamp{margin-left:auto;font-family:var(--mono)}
+.notes{margin:10px 0 0;padding:0;list-style:none;font-size:10.5px;color:var(--dim)}
+.notes li{margin:2px 0}
+.notes li::before{content:"› ";color:var(--orange)}
+
+/* ---------- picker ---------- */
+.picker{padding:22px}
+.picker h3{margin:0 0 6px;font-size:17px}
+.picker p{margin:0 0 16px;color:var(--muted);font-size:13px}
+.pick-list{display:flex;flex-direction:column;gap:7px}
+.pick-row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:rgba(255,255,255,.02);border:1px solid var(--line);border-radius:10px;padding:10px 13px;transition:.15s}
+.pick-row:hover{border-color:rgba(87,242,135,.4);background:rgba(87,242,135,.04);transform:translateX(2px)}
+.pick-avatar{width:30px;height:30px;border-radius:8px;object-fit:cover;background:var(--panel2);flex:0 0 auto}
+.pick-name{min-width:0;flex:1}
+.pick-name b{display:block;font-size:13px}
+.pick-name small{display:block;font-family:var(--mono);font-size:9.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px}
+.pick-meta{text-align:right;font-family:var(--mono);font-size:10px;color:var(--muted);flex:0 0 auto}
+.pick-meta b{display:block;color:var(--text);font-size:11px}
+
+/* ---------- radar ---------- */
+.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.pills{display:flex;gap:5px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);background:transparent;color:var(--muted);font-family:var(--mono);font-size:10.5px;padding:6px 11px;border-radius:7px;transition:.15s}
+.pill:hover{color:var(--text);border-color:#314055}
+.pill.on{background:rgba(87,242,135,.1);border-color:rgba(87,242,135,.4);color:var(--green)}
+.switch{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);cursor:pointer;user-select:none}
+.switch input{accent-color:var(--green);width:13px;height:13px}
+.toolbar select{background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:6px 9px;font-size:11px;color:var(--muted);outline:none;margin-left:auto}
+.radar-table{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--panel)}
+.rt-head,.rt-row{display:grid;grid-template-columns:34px minmax(150px,1.7fr) 74px 92px 92px 78px 96px 20px;align-items:center;gap:8px;padding:0 14px}
+.rt-head{height:34px;background:rgba(255,255,255,.02);border-bottom:1px solid var(--line);font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.rt-head .r{text-align:right}
+.rt-row{width:100%;text-align:left;background:none;border:0;border-bottom:1px solid rgba(255,255,255,.04);min-height:54px;transition:.13s;font:inherit;color:inherit}
+.rt-row:last-child{border-bottom:0}
+.rt-row:hover{background:rgba(87,242,135,.035)}
+.rt-rank{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.rt-token{display:flex;align-items:center;gap:9px;min-width:0;text-align:left}
+.av{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:var(--mono);font-size:11px;font-weight:700;color:#04170c;flex:0 0 auto;background:linear-gradient(135deg,var(--green),var(--cyan))}
+.rt-token b{display:block;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.rt-token small{display:block;font-family:var(--mono);font-size:9px;color:var(--dim)}
+.rt-num{text-align:right;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.rt-num.pos{color:var(--green)} .rt-num.neg{color:var(--red)}
+.rt-score{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.rt-score .mini{width:42px;height:3px;background:#1a2533;border-radius:3px;overflow:hidden}
+.rt-score .mini i{display:block;height:100%;border-radius:3px;background:var(--green)}
+.rt-score b{font-family:var(--mono);font-size:10.5px;width:20px;text-align:right}
+.rt-go{font-family:var(--mono);color:var(--dim);text-align:right}
+.rt-row:hover .rt-go{color:var(--green)}
+.radar-empty{padding:36px;text-align:center;color:var(--dim);font-size:12.5px;font-family:var(--mono)}
+.footnote{font-size:10.5px;color:var(--dim);margin:11px 0 0}
+
+/* ---------- watch ---------- */
+.watch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.watch-card{border:1px solid var(--line);border-radius:11px;background:var(--panel);padding:13px;display:flex;gap:11px;align-items:center;transition:.15s;cursor:pointer;position:relative}
+.watch-card:hover{border-color:#314055;transform:translateY(-1px)}
+.watch-info{min-width:0;flex:1}
+.watch-info b{display:block;font-size:12.5px}
+.watch-info small{display:block;font-family:var(--mono);font-size:9px;color:var(--dim)}
+.watch-score{text-align:right;flex:0 0 auto;font-family:var(--mono)}
+.watch-score b{display:block;font-size:16px;line-height:1.1}
+.watch-score span{font-size:8px;letter-spacing:.08em;color:var(--dim);text-transform:uppercase}
+.w-del{position:absolute;top:6px;right:6px;width:18px;height:18px;border:0;border-radius:5px;background:rgba(255,77,103,.12);color:var(--red);font-size:11px;line-height:1;display:none;place-items:center}
+.watch-card:hover .w-del{display:grid}
+.empty-line{border:1px dashed var(--line);border-radius:11px;padding:26px;text-align:center;color:var(--dim);font-size:12px}
+
+/* ---------- methodology ---------- */
+.meth-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.meth{border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.016);padding:16px}
+.meth b{font-family:var(--mono);font-size:11px;letter-spacing:.03em;display:block;margin-bottom:5px}
+.meth .w{font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:.1em;display:inline-block;border:1px solid rgba(87,242,135,.25);background:rgba(87,242,135,.06);padding:2px 6px;border-radius:4px;margin-bottom:8px}
+.meth p{margin:0;font-size:12px;color:var(--muted);line-height:1.55}
+.scale{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.scale span{font-family:var(--mono);font-size:9.5px;border:1px solid var(--line);border-radius:5px;padding:4px 8px;color:var(--muted)}
+.scale span i{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:5px}
+.warnbox{margin-top:16px;border:1px solid rgba(255,152,67,.25);background:rgba(255,152,67,.05);border-radius:11px;padding:15px 17px;font-size:12px;color:#d8c2ab;line-height:1.65}
+.warnbox b{color:var(--orange)}
+footer{border-top:1px solid var(--line);margin-top:60px;padding:26px 0 40px;font-size:10.5px;color:var(--dim);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+footer .mono{color:var(--dim)}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:#101823;border:1px solid #2a3a50;color:var(--text);font-family:var(--mono);font-size:11.5px;padding:10px 16px;border-radius:9px;opacity:0;pointer-events:none;transition:.25s;z-index:100;box-shadow:0 12px 40px rgba(0,0,0,.5);max-width:calc(100vw - 40px);text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:980px){
+  .result-grid{grid-template-columns:1fr}
+  .verdict-card{position:static}
+  .meth-grid{grid-template-columns:1fr 1fr}
+  .rt-head,.rt-row{grid-template-columns:30px minmax(130px,1.6fr) 66px 80px 80px 74px 88px 16px}
+}
+@media (max-width:820px){
+  .nav a:not(.nav-primary){display:none}
+  .nav .count{display:none}
+  .hero{padding:42px 0 22px}
+  .rt-head .col-age,.rt-row .col-age{display:none}
+  .rt-head,.rt-row{grid-template-columns:28px minmax(120px,1.8fr) 76px 80px 74px 88px 14px}
+}
+@media (max-width:640px){
+  .wrap{width:calc(100% - 28px)}
+  .topbar .wrap{height:58px;gap:10px}
+  .brand small{display:none}
+  .live{display:none}
+  .hero h1{letter-spacing:-.03em}
+  .searchbox{padding:6px 6px 6px 12px;border-radius:12px}
+  .searchbox button{padding:11px 14px;font-size:11px}
+  .searchbox input{font-size:12.5px}
+  .result-top{padding:15px;gap:12px}
+  .price-block{margin-left:0;text-align:left;width:100%;border-top:1px solid var(--line);padding-top:10px}
+  .metrics{grid-template-columns:1fr 1fr}
+  .flags{grid-template-columns:1fr}
+  .meth-grid{grid-template-columns:1fr}
+  .rt-head{display:none}
+  .rt-row{grid-template-columns:26px 1fr 16px;gap:8px;padding:10px 12px;min-height:58px}
+  .rt-row .col-liq,.rt-row .col-vol,.rt-row .col-chg,.rt-row .col-score{display:none}
+  .rt-token b{max-width:180px}
+  .rt-row .rt-score{display:none}
+  .check{grid-template-columns:1fr 70px}
+  .picker{padding:16px}
+  .pick-name small{max-width:180px}
+  .toolbar select{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#screener" aria-label="MemeRadar">
+      <svg viewBox="0 0 32 32" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <circle cx="16" cy="16" r="12.5" opacity=".3"/>
+        <circle cx="16" cy="16" r="7" opacity=".55"/>
+        <path d="M16 16 26.5 8.5" stroke-linecap="round"/>
+        <circle cx="16" cy="16" r="2" fill="currentColor" stroke="none"/>
+        <circle cx="23.2" cy="11.4" r="1.7" fill="currentColor" stroke="none"/>
+      </svg>
+      <span class="brand-text"><strong>MEME<span>RADAR</span></strong><small>screening on-chain</small></span>
+    </a>
+    <nav class="nav">
+      <a href="#screener" class="nav-primary">Screener</a>
+      <a href="#radar">Radar</a>
+      <a href="#pantauan">Pantauan <span class="count" id="watchCount">0</span></a>
+      <a href="#metodologi">Metodologi</a>
+    </nav>
+    <div class="live"><i></i> LIVE DATA</div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="hero" id="screener">
+    <p class="eyebrow">// screening meme coin · data on-chain</p>
+    <h1>Terbang atau <em>rugpull?</em><br>Cek dulu, baru beli.</h1>
+    <p class="lede">Tempel contract address atau ketik ticker. MemeRadar membaca likuiditas, keamanan kontrak, distribusi holder, dan momentum pasar — lalu memberi skor risiko 0–100 dalam hitungan detik.</p>
+    <form id="searchForm" class="searchbox" autocomplete="off" role="search">
+      <span class="prompt" aria-hidden="true">&gt;</span>
+      <input id="q" type="text" placeholder="Tempel contract address (0x… / Solana) atau ketik ticker…" aria-label="Contract address atau ticker token" spellcheck="false">
+      <button type="submit">SCAN</button>
+    </form>
+    <div class="quick">
+      <span>Contoh:</span>
+      <button type="button" data-quick data-addr="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263" data-chain="solana">BONK</button>
+      <button type="button" data-quick data-addr="EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm" data-chain="solana">WIF</button>
+      <button type="button" data-quick data-addr="0x6982508145454Ce325dDbE47a25d4ec3d2311933" data-chain="ethereum">PEPE</button>
+      <button type="button" data-quick data-addr="0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed" data-chain="base">DEGEN</button>
+      <button type="button" data-quick data-addr="0x95aD61b0a150d79219dCF64E1E6Cc01f0B64C4cE" data-chain="ethereum">SHIB</button>
+      <button type="button" data-quick data-addr="0xAaee1a9723aaDB7afA2810263653A34bA2C21C7a" data-chain="ethereum">MOG</button>
+    </div>
+    <p class="micro">Gratis · tanpa API key · DexScreener + GoPlus + RugCheck · bukan nasihat keuangan</p>
+  </section>
+
+  <section id="resultSection" aria-live="polite"></section>
+
+  <section class="section" id="radar">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">// radar pasar</p>
+        <h2>Pool yang sedang panas</h2>
+        <p>20 pool teratas 24 jam terakhir dari GeckoTerminal, lintas chain. Skor pasar = likuiditas, volume, umur, dan transaksi — bukan skor keamanan.</p>
+      </div>
+      <button class="btn small" id="refreshRadar" type="button">↻ Refresh</button>
+    </div>
+    <div class="toolbar">
+      <div class="pills" id="chainPills">
+        <button class="pill on" data-chain-filter="all" type="button">Semua</button>
+        <button class="pill" data-chain-filter="solana" type="button">Solana</button>
+        <button class="pill" data-chain-filter="ethereum" type="button">Ethereum</button>
+        <button class="pill" data-chain-filter="bsc" type="button">BNB</button>
+        <button class="pill" data-chain-filter="base" type="button">Base</button>
+      </div>
+      <label class="switch"><input type="checkbox" id="minLiq" checked> Likuiditas &gt; $25K</label>
+      <select id="radarSort" aria-label="Urutkan radar">
+        <option value="score">Urut: skor pasar</option>
+        <option value="vol">Urut: volume 24j</option>
+        <option value="chg">Urut: perubahan 24j</option>
+        <option value="liq">Urut: likuiditas</option>
+      </select>
+    </div>
+    <div class="radar-table">
+      <div class="rt-head">
+        <span>#</span><span>Token</span><span class="r col-age">Umur</span><span class="r col-liq">Likuiditas</span><span class="r col-vol">Vol 24j</span><span class="r col-chg">Δ 24j</span><span class="r col-score">Skor pasar</span><span></span>
+      </div>
+      <div id="radarList"><div class="radar-empty">Memuat data pasar…</div></div>
+    </div>
+    <p class="footnote">Klik baris untuk audit kontrak lengkap. Skor pasar tinggi tidak berarti token aman.</p>
+  </section>
+
+  <section class="section" id="pantauan">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">// pantauan saya</p>
+        <h2>Watchlist lokal</h2>
+        <p>Tersimpan di browser ini saja. Klik kartu untuk scan ulang kapan pun.</p>
+      </div>
+    </div>
+    <div id="watchList" class="watch-grid"></div>
+  </section>
+
+  <section class="section" id="metodologi">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">// metodologi</p>
+        <h2>Skor ini dihitung dari apa?</h2>
+        <p>Lima komponen dengan bobot tetap. Semakin lengkap datanya, semakin tinggi tingkat kepercayaan skor.</p>
+      </div>
+    </div>
+    <div class="meth-grid">
+      <div class="meth"><span class="w">BOBOT 35%</span><b>Keamanan kontrak</b><p>Honeypot, pajak beli/jual, hak mint &amp; freeze, hak istimewa owner, source code, kontrol dagang, plus skor risiko RugCheck untuk token Solana.</p></div>
+      <div class="meth"><span class="w">BOBOT 25%</span><b>Likuiditas &amp; LP</b><p>Kedalaman likuiditas dalam USD, status LP terkunci/burned, dan rasio likuiditas terhadap market cap. Likuiditas tipis = harga mudah digeser.</p></div>
+      <div class="meth"><span class="w">BOBOT 18%</span><b>Distribusi holder</b><p>Konsentrasi top 10 holder (pool dikecualikan bila terdeteksi), porsi dev/creator, dan jumlah holder. Sedikit holder = mudah di-dump.</p></div>
+      <div class="meth"><span class="w">BOBOT 14%</span><b>Momentum pasar</b><p>Volume 24 jam vs likuiditas, perubahan harga 24 jam, tekanan beli vs jual, dan umur pair. Mendeteksi token mati maupun parabola ekstrem.</p></div>
+      <div class="meth"><span class="w">BOBOT 8%</span><b>Transparansi &amp; sosial</b><p>Website resmi, akun X/Twitter, dan komunitas Telegram/Discord yang tercantum di DexScreener. Sinyal niat jangka panjang, bukan jaminan.</p></div>
+      <div class="meth"><span class="w">CARA BACA</span><b>Skor 0–100</b><p>80+ sinyal kuat · 65–79 potensi terbang · 50–64 netral · 35–49 risiko tinggi · di bawah 35 rawan rugpull. Data keamanan yang tidak tersedia membatasi skor maksimal.</p></div>
+    </div>
+    <div class="scale">
+      <span><i style="background:var(--green)"></i>80–100 sinyal kuat</span>
+      <span><i style="background:var(--lime)"></i>65–79 potensi</span>
+      <span><i style="background:var(--amber)"></i>50–64 netral</span>
+      <span><i style="background:var(--orange)"></i>35–49 risiko tinggi</span>
+      <span><i style="background:var(--red)"></i>0–34 rawan rugpull</span>
+    </div>
+    <div class="warnbox"><b>Baca ini dulu.</b> Tidak ada algoritma yang bisa meramal harga meme coin. Skor ini menilai risiko on-chain dan kesehatan pasar — bukan memprediksi kenaikan. Dev bisa dump kapan saja, likuiditas bisa ditarik, dan hype bisa hilang dalam hitungan menit. Selalu cek contract address, pakai uang dingin, dan jangan pernah beli karena satu skor.</div>
+  </section>
+
+</main>
+
+<footer class="wrap">
+  <span class="mono">MEMERADAR // data: DexScreener · GoPlus Security · RugCheck · GeckoTerminal</span>
+  <span>Dibuat untuk riset pribadi. Bukan saran investasi.</span>
+</footer>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   Konfigurasi chain & endpoint
+   ============================================================ */
+const CHAINS = {
+  ethereum:{label:'Ethereum',short:'ETH',goplus:'1',gt:'eth',color:'#8a92b2'},
+  solana:{label:'Solana',short:'SOL',goplus:'solana',gt:'solana',color:'#14f195'},
+  bsc:{label:'BNB Chain',short:'BNB',goplus:'56',gt:'bsc',color:'#f0b90b'},
+  base:{label:'Base',short:'BASE',goplus:'8453',gt:'base',color:'#0052ff'},
+  arbitrum:{label:'Arbitrum',short:'ARB',goplus:'42161',gt:'arbitrum',color:'#28a0f0'},
+  polygon:{label:'Polygon',short:'POL',goplus:'137',gt:'polygon_pos',color:'#8247e5'},
+  optimism:{label:'Optimism',short:'OP',goplus:'10',gt:'optimism',color:'#ff0420'},
+  avalanche:{label:'Avalanche',short:'AVAX',goplus:'43114',gt:'avax',color:'#e84142'},
+  fantom:{label:'Fantom',short:'FTM',goplus:'250',gt:'ftm',color:'#1969ff'},
+  cronos:{label:'Cronos',short:'CRO',goplus:'25',gt:'cronos',color:'#002d74'},
+  zksync:{label:'zkSync',short:'ZK',goplus:'324',gt:'zksync',color:'#8c8dfc'},
+  linea:{label:'Linea',short:'LINEA',goplus:'59144',gt:'linea',color:'#61dfff'},
+  scroll:{label:'Scroll',short:'SCR',goplus:'534352',gt:'scroll',color:'#ffd8a8'},
+  mantle:{label:'Mantle',short:'MNT',goplus:'5000',gt:'mantle',color:'#c9b37e'},
+  blast:{label:'Blast',short:'BLAST',goplus:'81457',gt:'blast',color:'#fcfc03'},
+  celo:{label:'Celo',short:'CELO',goplus:'42220',gt:'celo',color:'#fcff52'},
+  tron:{label:'Tron',short:'TRX',goplus:null,gt:'tron',color:'#eb0029'},
+  sui:{label:'Sui',short:'SUI',goplus:null,gt:'sui',color:'#4da2ff'},
+  ton:{label:'TON',short:'TON',goplus:null,gt:'ton',color:'#0098ea'}
+};
+const GT_TO_DEX = {};
+Object.entries(CHAINS).forEach(([k,v])=>{ if(v.gt) GT_TO_DEX[v.gt]=k; });
+
+const SECTIONS = {
+  security:{label:'Keamanan kontrak',weight:35},
+  liquidity:{label:'Likuiditas & LP',weight:25},
+  distribution:{label:'Distribusi holder',weight:18},
+  momentum:{label:'Momentum pasar',weight:14},
+  social:{label:'Transparansi & sosial',weight:8}
+};
+const IGNORE_SYMBOLS = new Set(['WBTC','WETH','USDC','USDT','DAI','STETH','WSTETH','CBBTC','WEETH','SUSDE','USDE','USDS','PYUSD','FDUSD','WBTC.E','WBNB','BUSD']);
+const BURN = new Set(['0x0000000000000000000000000000000000000000','0x000000000000000000000000000000000000dead','1nc1nerator11111111111111111111111111111111']);
+const RUG_MAP = {
+  'Mutable metadata':'Metadata token masih bisa diubah',
+  'Mint authority enabled':'Mint authority masih aktif',
+  'Freeze authority enabled':'Freeze authority masih aktif',
+  'Low liquidity':'Likuiditas rendah',
+  'Low amount of LP providers':'Penyedia likuiditas terlalu sedikit',
+  'Top 10 holders high ownership':'Top 10 holder menguasai supply besar',
+  'Single LP holder':'Hanya satu penyedia LP',
+  'Copycat token':'Mirip token lain (copycat)',
+  'High holder concentration':'Konsentrasi holder tinggi',
+  'Low amount of holders':'Jumlah holder sedikit',
+  'Low amount of liquidity':'Likuiditas rendah',
+  'Single holder ownership':'Satu holder menguasai supply besar'
+};
+const RUG_CHECK_MAP = {
+  'Mutable metadata':'metadata',
+  'Mint authority enabled':'mint',
+  'Freeze authority enabled':'freeze',
+  'Low liquidity':'liq',
+  'Low amount of liquidity':'liq',
+  'Top 10 holders high ownership':'top10',
+  'High holder concentration':'top10',
+  'Low amount of holders':'count',
+  'Single holder ownership':'top10'
+};
+const FRIENDLY = {
+  honeypot:'bisa dijual normal', mint:'supply tidak bisa ditambah', freeze:'tidak bisa dibekukan',
+  owner:'tanpa hak owner berbahaya', opensource:'source terverifikasi', control:'tanpa kontrol dagang aneh', tax:'pajak rendah',
+  rugcheck:'risiko RugCheck rendah', liq:'likuiditas cukup', lplock:'LP terkunci',
+  liqfdv:'rasio likuiditas sehat', top10:'distribusi holder wajar', dev:'porsi dev kecil',
+  count:'jumlah holder banyak', vol:'volume sehat', price:'harga tidak parabola',
+  bs:'tekanan beli sehat', age:'pair sudah berumur', site:'punya website', x:'punya akun X', tg:'punya komunitas'
+};
+
+const state = {
+  watch: loadWatch(),
+  current: null,
+  radar: [],
+  radarFilter: 'all',
+  radarSort: 'score',
+  radarMinLiq: true,
+  last: null,
+  reqId: 0
+};
+
+/* ============================================================
+   Util
+   ============================================================ */
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc = v => String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = v => { if(v===null||v===undefined||v==='') return null; const n=Number(v); return Number.isFinite(n)?n:null; };
+const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+const flag = v => v===true || v===1 || v==='1';
+const statusFlag = o => { if(!o || o.status===undefined || o.status===null) return null; return flag(o.status); };
+const pctVal = v => { const n=num(v); if(n===null) return null; return n<=1 ? n*100 : n; };
+
+function fmtUsd(v){
+  const n=num(v);
+  if(n===null) return '—';
+  if(n>=1e9) return '$'+(n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return '$'+(n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K';
+  if(n>=1) return '$'+n.toFixed(0);
+  return '$'+n.toFixed(2);
+}
+function fmtPrice(v){
+  const n=num(v);
+  if(n===null) return '—';
+  if(n>=1) return '$'+n.toLocaleString('en-US',{maximumFractionDigits:2});
+  let digits=4;
+  if(n<0.1) digits=6;
+  if(n<0.001) digits=9;
+  if(n<0.000001) digits=12;
+  return '$'+n.toFixed(digits).replace(/0+$/,'').replace(/\.$/,'');
+}
+function fmtPct(v){
+  const n=num(v);
+  if(n===null) return '—';
+  return (n>0?'+':'')+n.toFixed(2)+'%';
+}
+function fmtNum(v){
+  const n=num(v);
+  if(n===null) return '—';
+  return new Intl.NumberFormat('en-US',{notation:'compact',maximumFractionDigits:1}).format(n);
+}
+function fmtAge(ms){
+  if(ms===null||ms===undefined) return '—';
+  const m=Math.floor(ms/60000);
+  if(m<60) return m+' mnt';
+  const h=Math.floor(m/60);
+  if(h<24) return h+' jam';
+  const d=Math.floor(h/24);
+  if(d<30) return d+' hari';
+  const mo=Math.floor(d/30);
+  if(mo<12) return mo+' bln';
+  return Math.floor(mo/12)+' thn';
+}
+function chainInfo(id){ return CHAINS[id] || {label:id||'Chain',short:(id||'?').slice(0,4).toUpperCase(),goplus:null,gt:null,color:'#7c8aa0'}; }
+function toneClass(score){
+  if(score>=80) return 'good';
+  if(score>=65) return 'lime';
+  if(score>=50) return 'amber';
+  if(score>=35) return 'orange';
+  return 'red';
+}
+function colorForScore(score){
+  if(score>=70) return 'var(--green)';
+  if(score>=50) return 'var(--amber)';
+  return 'var(--red)';
+}
+function timeStamp(){ return new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); }
+
+function toast(msg){
+  const t=$('#toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch(e){
+    try{
+      const ta=document.createElement('textarea');
+      ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      const ok=document.execCommand('copy');
+      ta.remove();
+      return ok;
+    }catch(e2){ return false; }
+  }
+}
+
+/* ============================================================
+   HTTP dengan cache & timeout
+   ============================================================ */
+const CACHE = new Map();
+async function getJSON(url,opt={}){
+  const {timeout=16000,ttl=60000,force=false}=opt;
+  const hit=CACHE.get(url);
+  if(!force && hit && Date.now()-hit.t<ttl) return hit.v;
+  const ctrl=new AbortController();
+  const timer=setTimeout(()=>ctrl.abort(),timeout);
+  try{
+    const res=await fetch(url,{signal:ctrl.signal,headers:{'Accept':'application/json'}});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    CACHE.set(url,{t:Date.now(),v:data});
+    return data;
+  }finally{
+    clearTimeout(timer);
+  }
+}
+
+const API = {
+  dexTokens: a => 'https://api.dexscreener.com/latest/dex/tokens/'+encodeURIComponent(a),
+  dexSearch: q => 'https://api.dexscreener.com/latest/dex/search?q='+encodeURIComponent(q),
+  gtTrending: () => 'https://api.geckoterminal.com/api/v2/networks/trending_pools?page=1',
+  goplusEvm: (chain,addr) => 'https://api.gopluslabs.io/api/v1/token_security/'+chain+'?contract_addresses='+encodeURIComponent(addr),
+  goplusSol: addr => 'https://api.gopluslabs.io/api/v1/solana/token_security?contract_addresses='+encodeURIComponent(addr),
+  rugSummary: addr => 'https://api.rugcheck.xyz/v1/tokens/'+encodeURIComponent(addr)+'/report/summary',
+  rugFull: addr => 'https://api.rugcheck.xyz/v1/tokens/'+encodeURIComponent(addr)+'/report'
+};
+
+/* ============================================================
+   Query
+   ============================================================ */
+const isEVM = q => /^0x[a-fA-F0-9]{40}$/.test(q);
+const isSolAddr = q => /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(q) && !q.startsWith('0x');
+
+async function searchTokens(q){
+  const data=await getJSON(API.dexSearch(q),{timeout:16000,ttl:45000});
+  const groups=new Map();
+  for(const p of (data.pairs||[])){
+    if(!p || !p.baseToken || !p.baseToken.address) continue;
+    const key=p.chainId+':'+p.baseToken.address.toLowerCase();
+    const liq=num(p.liquidity&&p.liquidity.usd)||0;
+    const prev=groups.get(key);
+    if(!prev || liq>prev.liq){
+      groups.set(key,{
+        address:p.baseToken.address,
+        chainId:p.chainId,
+        symbol:p.baseToken.symbol||'?',
+        name:p.baseToken.name||'',
+        liq,
+        priceUsd:num(p.priceUsd),
+        change:num(p.priceChange&&p.priceChange.h24),
+        image:(p.info&&p.info.imageUrl)||''
+      });
+    }
+  }
+  return Array.from(groups.values()).sort((a,b)=>b.liq-a.liq).slice(0,8);
+}
+
+/* ============================================================
+   Security
+   ============================================================ */
+async function fetchSecurity(pair){
+  const out={evm:null,sol:null,rug:null,full:null,status:{goplus:'skip',rug:'skip'},notes:[]};
+  const addr=pair.baseToken.address;
+  const chain=chainInfo(pair.chainId);
+
+  if(pair.chainId==='solana'){
+    const [g,r]=await Promise.allSettled([
+      getJSON(API.goplusSol(addr),{timeout:18000,ttl:120000}),
+      getJSON(API.rugSummary(addr),{timeout:18000,ttl:120000})
+    ]);
+    if(g.status==='fulfilled' && g.value && g.value.result){
+      const first=Object.values(g.value.result)[0];
+      if(first){ out.sol=first; out.status.goplus='ok'; }
+      else out.status.goplus='limited';
+    }else out.status.goplus='err';
+    if(r.status==='fulfilled' && r.value && !r.value.error){
+      out.rug=r.value; out.status.rug='ok';
+    }else out.status.rug='err';
+
+    const hasHolders=Array.isArray(out.sol&&out.sol.holders)&&out.sol.holders.length>0;
+    if(!hasHolders){
+      try{
+        const full=await getJSON(API.rugFull(addr),{timeout:22000,ttl:120000});
+        if(full && !full.error) out.full=full;
+      }catch(e){ out.notes.push('Laporan holder lengkap RugCheck tidak bisa dimuat.'); }
+    }
+  }else if(chain.goplus){
+    try{
+      const g=await getJSON(API.goplusEvm(chain.goplus,addr),{timeout:20000,ttl:120000});
+      if(g && g.result){
+        const first=Object.values(g.result)[0];
+        if(first){ out.evm=first; out.status.goplus='ok'; }
+        else out.status.goplus='limited';
+      }else out.status.goplus='err';
+    }catch(e){ out.status.goplus='err'; }
+    out.notes.push('RugCheck hanya tersedia untuk token Solana.');
+  }else{
+    out.notes.push('Chain '+chain.label+' belum didukung pemeriksaan keamanan otomatis.');
+  }
+  return out;
+}
+
+function holdersInfo(sec){
+  let list=[],count=null,devPct=null,source='';
+  const e=sec.evm,s=sec.sol,full=sec.full;
+
+  if(e){
+    const lpSet=new Set((e.lp_holders||[]).map(h=>String(h.address||'').toLowerCase()));
+    list=(e.holders||[]).filter(h=>{
+      const a=String(h.account||h.address||'').toLowerCase();
+      return a && !lpSet.has(a) && !BURN.has(a);
+    }).map(h=>pctVal(h.percent)).filter(v=>v!==null);
+    count=num(e.holder_count);
+    devPct=num(e.creator_percent);
+    source='GoPlus';
+  }else if(s){
+    const known=(full&&full.knownAccounts)||{};
+    const lpSet=new Set((s.lp_holders||[]).map(h=>String(h.account||'').toLowerCase()));
+    list=(s.holders||[]).filter(h=>{
+      const a=String(h.account||'').toLowerCase();
+      return a && !lpSet.has(a) && !BURN.has(a) && !(known[a]&&known[a].type==='AMM');
+    }).map(h=>pctVal(h.percent)).filter(v=>v!==null);
+    count=num(s.holder_count);
+    source='GoPlus';
+  }
+
+  if(!list.length && full && Array.isArray(full.topHolders)){
+    const known=full.knownAccounts||{};
+    list=full.topHolders.filter(h=>{
+      const owner=String(h.owner||'').toLowerCase();
+      return !(known[owner]&&known[owner].type==='AMM') && !BURN.has(owner);
+    }).map(h=>num(h.pct)).filter(v=>v!==null);
+    source='RugCheck';
+  }
+  if(count===null && full) count=num(full.totalHolders);
+  if(devPct===null && full){
+    const sup=num(full.token&&full.token.supply);
+    const bal=num(full.creatorBalance);
+    if(sup && bal!==null) devPct=bal/sup*100;
+  }
+  list.sort((a,b)=>b-a);
+  const top10=list.length?list.slice(0,10).reduce((a,b)=>a+b,0):null;
+  return {top10,count,devPct,source,list};
+}
+
+function lpLockedPct(sec){
+  if(sec.rug){ const v=num(sec.rug.lpLockedPct); if(v!==null) return clamp(v,0,100); }
+  if(sec.full && Array.isArray(sec.full.markets)){
+    const vals=sec.full.markets.map(m=>num(m.lp&&m.lp.lpLockedPct)).filter(v=>v!==null);
+    if(vals.length) return clamp(Math.max.apply(null,vals),0,100);
+  }
+  if(sec.evm && Array.isArray(sec.evm.lp_holders) && sec.evm.lp_holders.length){
+    const sum=sec.evm.lp_holders.filter(h=>flag(h.is_locked)).reduce((a,h)=>a+(num(h.percent)||0),0);
+    return clamp(sum<=1.01?sum*100:sum,0,100);
+  }
+  return null;
+}
+
+function rugRisks(sec){
+  const arr=(sec.rug&&Array.isArray(sec.rug.risks)&&sec.rug.risks.length)?sec.rug.risks:((sec.full&&Array.isArray(sec.full.risks))?sec.full.risks:[]);
+  return arr.filter(r=>r&&r.name).map(r=>({
+    key:r.name,
+    label:RUG_MAP[r.name]||r.name,
+    detail:r.description||'',
+    level:String(r.level||'').toLowerCase(),
+    score:num(r.score)
+  }));
+}
+
+/* ============================================================
+   Scoring
+   ============================================================ */
+function scoreToken(r,sec){
+  const checks=[];
+  const e=sec.evm,s=sec.sol;
+  let honeypot=false,mintable=null,freezable=null;
+
+  const push=(section,id,label,weight,ratio,detail)=>{
+    const safe=ratio===null||ratio===undefined?null:clamp(ratio,0,1);
+    const status=safe===null?'unknown':safe>=0.8?'good':safe>=0.45?'warn':'bad';
+    checks.push({section,id,label,weight,ratio:safe,detail,status});
+  };
+
+  /* --- keamanan: EVM --- */
+  if(e){
+    const hpRaw=e.is_honeypot!==undefined?e.is_honeypot:(e.cannot_sell_all!==undefined?e.cannot_sell_all:e.cannot_buy);
+    honeypot=[e.is_honeypot,e.cannot_sell_all,e.cannot_buy].some(flag);
+    push('security','honeypot','Honeypot & bisa dijual',10,hpRaw===undefined||hpRaw===null?null:(honeypot?0:1),
+      honeypot?'Terdeteksi: penjualan bisa diblokir':'Tidak terdeteksi honeypot');
+
+    if(e.buy_tax!==undefined||e.sell_tax!==undefined){
+      const bt=num(e.buy_tax),st=num(e.sell_tax);
+      const tax=Math.max(bt===null?0:bt,st===null?0:st);
+      push('security','tax','Pajak beli / jual',5,tax<=5?1:tax<=10?0.45:0,
+        'Beli '+(bt===null?'?':bt)+'% · Jual '+(st===null?'?':st)+'%');
+    }
+    if(e.is_mintable!==undefined&&e.is_mintable!==null){
+      push('security','mint','Hak mint supply',5,flag(e.is_mintable)?0:1,
+        flag(e.is_mintable)?'Dev masih bisa mencetak token baru':'Supply tidak bisa ditambah');
+    }
+    const ownerKeys=['owner_change_balance','can_take_back_ownership','hidden_owner','selfdestruct'];
+    const ownerKnown=ownerKeys.some(k=>e[k]!==undefined&&e[k]!==null);
+    const ownerDanger=ownerKeys.some(k=>flag(e[k]));
+    if(ownerKnown){
+      push('security','owner','Hak istimewa owner',5,ownerDanger?0:1,
+        ownerDanger?'Owner bisa mengubah saldo / mengambil alih kontrak':'Tidak ada hak owner berbahaya');
+    }
+    if(e.is_open_source!==undefined&&e.is_open_source!==null){
+      const os=flag(e.is_open_source),proxy=flag(e.is_proxy);
+      push('security','opensource','Source code & proxy',3,os?(proxy?0.5:1):0,
+        os?(proxy?'Source terbuka, tapi memakai proxy':'Source terbuka & bukan proxy'):'Source code tidak terverifikasi');
+    }
+    const ctrlKeys=['transfer_pausable','trading_cooldown','is_blacklisted','is_whitelisted','anti_whale_modifiable','personal_slippage_modifiable'];
+    if(ctrlKeys.some(k=>e[k]!==undefined&&e[k]!==null)){
+      const danger=ctrlKeys.some(k=>flag(e[k]));
+      push('security','control','Bisa dibekukan / dibatasi',4,danger?0.3:1,
+        danger?'Ada fungsi pause / blacklist / limit dagang':'Tidak ada kontrol dagang berbahaya');
+    }
+  }
+
+  /* --- keamanan: Solana --- */
+  if(s){
+    if(s.non_transferable!==undefined&&s.non_transferable!==null){
+      const nt=flag(s.non_transferable);
+      honeypot=nt;
+      push('security','honeypot','Bisa dijual / ditransfer',10,nt?0:1,
+        nt?'Token non-transferable — tidak bisa dijual':'Tidak ada larangan transfer');
+    }
+    mintable=statusFlag(s.mintable);
+    if(mintable!==null){
+      push('security','mint','Hak mint supply',5,mintable?0:1,
+        mintable?'Mint authority masih aktif':'Mint authority sudah dicabut');
+    }
+    freezable=statusFlag(s.freezable);
+    if(freezable!==null){
+      push('security','freeze','Hak freeze akun',4,freezable?0:1,
+        freezable?'Freeze authority masih aktif — akun bisa dibekukan':'Freeze authority sudah dicabut');
+    }
+    const authDanger=statusFlag(s.balance_mutable_authority)===true||statusFlag(s.closable)===true;
+    if(statusFlag(s.balance_mutable_authority)!==null||statusFlag(s.closable)!==null){
+      push('security','owner','Hak istimewa authority',4,authDanger?0:1,
+        authDanger?'Authority bisa mengubah saldo / menutup akun':'Tidak ada authority berbahaya');
+    }
+    const meta=statusFlag(s.metadata_mutable);
+    if(meta!==null){
+      push('security','metadata','Metadata bisa diubah',2,meta?0.35:1,
+        meta?'Nama / simbol / logo masih bisa diganti':'Metadata permanen');
+    }
+  }
+  if(sec.rug){
+    const norm=num(sec.rug.score_normalised);
+    if(norm!==null){
+      push('security','rugcheck','Skor risiko RugCheck',6,1-clamp(norm,0,100)/100,
+        'Risiko '+Math.round(norm)+'/100 dari RugCheck');
+    }
+  }
+  if(!e&&!s){
+    sec.notes.push('Pemeriksaan keamanan kontrak tidak tersedia untuk token ini.');
+  }
+
+  /* --- likuiditas --- */
+  const liq=r.liq;
+  push('liquidity','liq','Kedalaman likuiditas',12,
+    liq===null?null:liq>=500000?1:liq>=200000?0.9:liq>=100000?0.75:liq>=50000?0.55:liq>=25000?0.35:liq>=10000?0.15:0.03,
+    liq===null?'Likuiditas tidak diketahui':fmtUsd(liq)+(r.pairCount>1?' total di '+r.pairCount+' pair':' di pair terbaik'));
+  const lock=lpLockedPct(sec);
+  const evmLpUnknown=!!(sec.evm && Array.isArray(sec.evm.lp_holders) && sec.evm.lp_holders.length && lock===0);
+  push('liquidity','lplock','LP terkunci / burned',7,
+    lock===null?null:evmLpUnknown?0.3:lock>=90?1:lock>=50?0.85:lock>=20?0.6:lock>0?0.4:0.15,
+    lock===null?'Data lock LP tidak tersedia':evmLpUnknown?'Tidak terdeteksi LP terkunci (bisa jadi pool V3/V4 tanpa token LP)':Math.round(lock)+'% LP terkunci atau burned');
+  const valuation=r.mcap||r.fdv;
+  const lf=liq!==null&&valuation?liq/valuation:null;
+  push('liquidity','liqfdv','Likuiditas vs valuasi',6,
+    lf===null?null:lf>=0.25?1:lf>=0.12?0.85:lf>=0.06?0.65:lf>=0.03?0.45:lf>=0.01?0.25:0.1,
+    lf===null?'Market cap / FDV tidak tersedia':(lf*100).toFixed(1)+'% dari market cap');
+
+  /* --- distribusi --- */
+  const h=holdersInfo(sec);
+  const top10=h.top10;
+  push('distribution','top10','Konsentrasi top 10 holder',9,
+    top10===null?null:top10<=20?1:top10<=35?0.75:top10<=50?0.5:top10<=65?0.25:0,
+    top10===null?'Data holder tidak tersedia':'Top 10 (tanpa pool) pegang '+top10.toFixed(1)+'% supply');
+  const dev=h.devPct;
+  push('distribution','dev','Porsi dev / creator',5,
+    dev===null?null:dev<=2?1:dev<=5?0.7:dev<=10?0.4:0,
+    dev===null?'Porsi dev tidak diketahui':'Dev memegang '+dev.toFixed(1)+'% supply');
+  const count=h.count;
+  push('distribution','count','Jumlah holder',4,
+    count===null?null:count>=2000?1:count>=500?0.85:count>=150?0.65:count>=40?0.35:0.1,
+    count===null?'Jumlah holder tidak tersedia':fmtNum(count)+' holder');
+
+  /* --- momentum --- */
+  const vol=r.vol24;
+  const vlr=vol!==null&&liq!==null&&liq>0?vol/liq:null;
+  push('momentum','vol','Volume vs likuiditas',5,
+    vlr===null?null:vlr>=0.3&&vlr<=15?1:vlr<0.3&&vlr>=0.1?0.6:vlr>15&&vlr<=40?0.55:vlr<0.1?0.25:0.4,
+    vlr===null?'Volume tidak tersedia':vlr.toFixed(2)+'× likuiditas per 24 jam');
+  const chg=r.chg24;
+  push('momentum','price','Perubahan harga 24 jam',4,
+    chg===null?null:chg>=-35&&chg<=120?1:(chg>=-60&&chg<-35)||(chg>120&&chg<=300)?0.55:0.2,
+    chg===null?'Perubahan harga tidak tersedia':fmtPct(chg)+' dalam 24 jam');
+  const bs=(r.buys!==null&&r.sells!==null&&(r.buys+r.sells)>0)?r.buys/(r.buys+r.sells):null;
+  push('momentum','bs','Tekanan beli vs jual',3,
+    bs===null?null:bs>=0.4&&bs<=0.62?1:(bs>=0.3&&bs<0.4)||(bs>0.62&&bs<=0.72)?0.6:0.3,
+    bs===null?'Transaksi tidak tersedia':Math.round(bs*100)+'% transaksi adalah beli');
+  push('momentum','age','Umur pair',2,
+    r.ageMs===null?null:r.ageMs>=604800000?1:r.ageMs>=172800000?0.85:r.ageMs>=86400000?0.65:r.ageMs>=21600000?0.4:0.2,
+    r.ageMs===null?'Umur pair tidak diketahui':fmtAge(r.ageMs)+' sejak pair dibuat');
+
+  /* --- sosial --- */
+  push('social','site','Website resmi',3,r.websites.length?1:0,
+    r.websites.length?r.websites[0].replace(/^https?:\/\//,'').replace(/\/$/,''):'Tidak ada website di DexScreener');
+  const hasX=r.socials.some(x=>/twitter|x\.com/i.test((x.type||'')+' '+(x.url||'')));
+  push('social','x','Akun X / Twitter',3,hasX?1:0,
+    hasX?'Akun X terhubung':'Tidak ada akun X');
+  const hasTg=r.socials.some(x=>/telegram|discord/i.test((x.type||'')+' '+(x.url||'')));
+  push('social','tg','Komunitas Telegram / Discord',2,hasTg?1:0,
+    hasTg?'Grup komunitas terhubung':'Tidak ada grup komunitas');
+
+  /* --- agregasi --- */
+  const sections={};
+  for(const key of Object.keys(SECTIONS)){
+    const list=checks.filter(c=>c.section===key);
+    const avail=list.filter(c=>c.ratio!==null);
+    const totalW=list.reduce((a,c)=>a+c.weight,0);
+    const availW=avail.reduce((a,c)=>a+c.weight,0);
+    const coverage=totalW?availW/totalW:0;
+    const avg=availW?avail.reduce((a,c)=>a+c.ratio*c.weight,0)/availW:0;
+    sections[key]={
+      label:SECTIONS[key].label,
+      weight:SECTIONS[key].weight,
+      score:availW?avg*(0.55+0.45*coverage):0,
+      coverage,
+      checks:list
+    };
+  }
+  let rawNum=0,rawDen=0,confW=0;
+  for(const key of Object.keys(sections)){
+    const sec2=sections[key];
+    if(sec2.coverage>0){ rawNum+=sec2.weight*sec2.score; rawDen+=sec2.weight; }
+    confW+=sec2.weight*sec2.coverage;
+  }
+  const confidence=clamp(confW/100,0,1);
+  let score=rawDen?(rawNum/rawDen)*100:50;
+  score=score*(0.72+0.28*confidence);
+
+  /* --- cap & sinyal kritis --- */
+  let cap=100;
+  const criticals=[];
+  if(honeypot){ cap=Math.min(cap,3); criticals.push({label:'Honeypot terdeteksi',detail:'Token tidak bisa dijual atau penjualan diblokir.'}); }
+  if(sec.rug&&sec.rug.rugged===true){ cap=Math.min(cap,5); criticals.push({label:'Ditandai RugCheck',detail:'RugCheck menandai token ini sebagai rugged.'}); }
+  if(mintable===true&&freezable===true){ cap=Math.min(cap,25); criticals.push({label:'Mint + freeze aktif',detail:'Dev bisa mencetak token baru dan membekukan akun.'}); }
+  if(liq!==null&&liq<3000){ cap=Math.min(cap,30); criticals.push({label:'Likuiditas sangat tipis',detail:'Di bawah $3K — harga mudah digeser.'}); }
+  else if(liq!==null&&liq<25000) cap=Math.min(cap,55);
+  else if(liq!==null&&liq<50000) cap=Math.min(cap,64);
+  if(top10!==null&&top10>80){ cap=Math.min(cap,40); criticals.push({label:'Holder sangat terkonsentrasi',detail:'Top 10 holder menguasai lebih dari 80% supply.'}); }
+  else if(top10!==null&&top10>65) cap=Math.min(cap,45);
+  else if(top10!==null&&top10>50) cap=Math.min(cap,64);
+  if(r.ageMs!==null&&r.ageMs<21600000) cap=Math.min(cap,55);
+  else if(r.ageMs!==null&&r.ageMs<86400000) cap=Math.min(cap,69);
+  const rugNorm=sec.rug?num(sec.rug.score_normalised):null;
+  if(rugNorm!==null&&rugNorm>=75){ cap=Math.min(cap,35); criticals.push({label:'Risiko RugCheck tinggi',detail:'Skor risiko RugCheck '+Math.round(rugNorm)+'/100.'}); }
+  if(sections.security.coverage===0){ cap=Math.min(cap,64); }
+  if(confidence<0.5){ cap=Math.min(cap,64); }
+  score=clamp(Math.round(Math.min(score,cap)),0,100);
+
+  const critical=honeypot||(sec.rug&&sec.rug.rugged===true);
+  const verdict=verdictFor(score,critical);
+  const risks=rugRisks(sec);
+  const notes=sec.notes.slice();
+
+  if(sections.security.coverage===0) notes.push('Skor maksimal dibatasi 64 karena data keamanan tidak tersedia.');
+  else if(sections.security.coverage<1) notes.push('Sebagian data keamanan tidak tersedia — kepercayaan skor diturunkan.');
+  if(sections.distribution.coverage<0.5) notes.push('Data distribusi holder terbatas.');
+  if(sec.status.rug==='err'&&r.chainId==='solana') notes.push('RugCheck tidak merespons — analisis Solana memakai GoPlus saja.');
+
+  return {score,confidence,sections,checks,verdict,criticals,risks,notes,holders:h};
+}
+
+function verdictFor(score,critical){
+  if(critical) return {key:'critical',title:'Rugpull terdeteksi',sub:'Jangan beli. Kontrak ini memblokir penjualan atau sudah ditandai scam.',tone:'red'};
+  if(score>=80) return {key:'strong',title:'Sinyal terbang kuat',sub:'Fondasi on-chain sehat untuk ukuran meme coin. Tetap spekulatif — bukan jaminan.',tone:'good'};
+  if(score>=65) return {key:'fly',title:'Potensi terbang',sub:'Ada fondasi yang bagus, tapi beberapa risiko masih perlu dipantau.',tone:'lime'};
+  if(score>=50) return {key:'neutral',title:'Netral — pantau dulu',sub:'Belum ada sinyal kuat. Tunggu volume dan jumlah holder tumbuh.',tone:'amber'};
+  if(score>=35) return {key:'risk',title:'Risiko tinggi',sub:'Banyak bendera kuning. Kalau tetap masuk, pakai uang yang siap hilang.',tone:'orange'};
+  return {key:'rug',title:'Rawan rugpull',sub:'Pola khas token yang siap ditinggal dev. Sebaiknya hindari.',tone:'red'};
+}
+
+/* ============================================================
+   Render
+   ============================================================ */
+function resultEl(){ return $('#resultSection'); }
+
+function showLoading(text){
+  const el=resultEl();
+  el.hidden=false;
+  el.innerHTML=
+    '<div class="panel loading-panel">'+
+      '<div class="radar-anim"><i></i></div>'+
+      '<p id="loadText">'+esc(text)+'</p>'+
+      '<div class="load-bar"><i></i></div>'+
+    '</div>';
+}
+function setLoadText(text){
+  const el=$('#loadText');
+  if(el) el.textContent=text;
+}
+function showError(title,detail){
+  const el=resultEl();
+  el.hidden=false;
+  el.innerHTML=
+    '<div class="panel loading-panel">'+
+      '<div class="err-icon">!</div>'+
+      '<div class="err-box"><h3 style="margin:0;font-size:17px">'+esc(title)+'</h3>'+
+      '<p class="err" style="font-size:12.5px;line-height:1.6">'+esc(detail)+'</p>'+
+      '<button class="btn small" data-action="retry" type="button">Coba lagi</button></div>'+
+    '</div>';
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderPicker(list,q){
+  const el=resultEl();
+  el.hidden=false;
+  el.innerHTML=
+    '<div class="panel picker">'+
+      '<h3>'+list.length+' token ditemukan untuk "'+esc(q)+'"</h3>'+
+      '<p>Ticker bisa dipakai banyak token. Pilih kontrak yang benar sebelum membeli.</p>'+
+      '<div class="pick-list">'+
+        list.map(t=>{
+          const ch=chainInfo(t.chainId);
+          return '<button type="button" class="pick-row" data-action="pick" data-addr="'+esc(t.address)+'" data-chain="'+esc(t.chainId)+'">'+
+            (t.image?'<img class="pick-avatar" src="'+esc(t.image)+'" alt="" loading="lazy" onerror="this.style.display=\'none\'">':'<span class="av">'+esc((t.symbol||'?').slice(0,2))+'</span>')+
+            '<span class="pick-name"><b>'+esc(t.symbol)+' <span class="muted" style="font-weight:400;font-size:11px">'+esc(t.name)+'</span></b><small>'+esc(t.address)+'</small></span>'+
+            '<span class="pick-meta"><b>'+fmtUsd(t.liq)+'</b>'+esc(ch.label)+'</span>'+
+          '</button>';
+        }).join('')+
+      '</div>'+
+    '</div>';
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderDetail(r,res){
+  const el=resultEl();
+  el.hidden=false;
+  const ch=chainInfo(r.chainId);
+  const tone=res.verdict.tone;
+  const circ=364.42;
+  const dash=circ*(1-res.score/100);
+  const watched=isWatched(r);
+  const priceCls=r.chg24===null?'':(r.chg24>=0?'pos':'neg');
+
+  const good=res.checks.filter(c=>c.status==='good').slice(0,5);
+  const bad=res.checks.filter(c=>c.status==='bad');
+  const warn=res.checks.filter(c=>c.status==='warn');
+  const neg=[].concat(bad,warn).slice(0,5);
+  const checkIds=new Set(res.checks.map(c=>c.id));
+  const rugOnly=res.risks.filter(x=>!(RUG_CHECK_MAP[x.key]&&checkIds.has(RUG_CHECK_MAP[x.key])));
+
+  const metrics=[
+    ['Market cap',fmtUsd(r.mcap||r.fdv)],
+    ['Likuiditas',fmtUsd(r.liq)],
+    ['Volume 24j',fmtUsd(r.vol24)],
+    [res.holders.count!==null?'Holder':'Umur pair',res.holders.count!==null?fmtNum(res.holders.count):fmtAge(r.ageMs)]
+  ];
+
+  const summary=buildSummary(r,res);
+
+  el.innerHTML=
+    '<div class="result-top panel">'+
+      (r.image?'<img class="token-avatar" src="'+esc(r.image)+'" alt="'+esc(r.symbol)+'" onerror="this.style.display=\'none\'">':'<div class="token-avatar ph">'+esc(r.symbol.slice(0,2))+'</div>')+
+      '<div class="token-id">'+
+        '<div class="badges"><span class="badge chain">'+esc(ch.label)+'</span><span class="badge">'+esc(r.dexId||'DEX')+'</span>'+
+        (r.quote?'<span class="badge">'+esc(r.quote)+'</span>':'')+'</div>'+
+        '<h2>'+esc(r.symbol)+' <span>'+esc(r.name)+'</span></h2>'+
+        '<div class="contract"><code title="'+esc(r.address)+'">'+esc(r.address)+'</code>'+
+        '<button class="icon-btn" type="button" data-action="copy-contract" title="Salin contract address" aria-label="Salin contract address">'+
+          '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="5" y="5" width="9" height="9" rx="1.5"/><path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5"/></svg>'+
+        '</button></div>'+
+      '</div>'+
+      '<div class="price-block"><b>'+fmtPrice(r.priceUsd)+'</b><span class="'+priceCls+'">'+fmtPct(r.chg24)+' <span class="dim">24j</span></span></div>'+
+    '</div>'+
+    '<div class="result-grid">'+
+      '<aside class="verdict-card tone-'+tone+'">'+
+        '<div class="gauge-wrap">'+
+          '<svg class="gauge" viewBox="0 0 140 140" aria-hidden="true">'+
+            '<circle class="track" cx="70" cy="70" r="58"/>'+
+            '<circle class="fill" cx="70" cy="70" r="58" stroke-dasharray="'+circ+'" stroke-dashoffset="'+dash+'"/>'+
+          '</svg>'+
+          '<div class="gauge-center"><b>'+res.score+'</b><span>/ 100</span></div>'+
+        '</div>'+
+        '<span class="verdict-badge">'+esc(res.verdict.title)+'</span>'+
+        '<p class="verdict-sub">'+esc(res.verdict.sub)+'</p>'+
+        '<div class="conf-head"><span>KEPERCAYAAN DATA</span><span>'+Math.round(res.confidence*100)+'%</span></div>'+
+        '<div class="conf-bar"><i style="width:'+Math.round(res.confidence*100)+'%"></i></div>'+
+        '<p class="conf-note">Dihitung dari lengkapnya data keamanan, holder, dan pasar.</p>'+
+        '<div class="actions">'+
+          (r.url?'<a class="btn primary" href="'+esc(r.url)+'" target="_blank" rel="noopener">Buka chart ↗</a>':'')+
+          '<button class="btn" type="button" data-action="watch">'+(watched?'✓ Sedang dipantau':'+ Pantau token')+'</button>'+
+          '<button class="btn" type="button" data-action="copy-result">Salin ringkasan</button>'+
+        '</div>'+
+      '</aside>'+
+      '<div class="report">'+
+        '<div class="metrics">'+metrics.map(m=>'<div class="metric"><span>'+esc(m[0])+'</span><b>'+esc(m[1])+'</b></div>').join('')+'</div>'+
+        '<div class="summary-box">'+summary+'</div>'+
+        '<div class="flags">'+
+          '<div class="flag-col pos"><h4>● Sinyal positif</h4><ul class="flag-list">'+
+            (good.length?good.map(c=>'<li><i>✓</i><span><b>'+esc(c.label)+'</b> — '+esc(c.detail)+'</span></li>').join(''):'<li class="flag-empty">Belum ada sinyal positif yang kuat.</li>')+
+          '</ul></div>'+
+          '<div class="flag-col neg"><h4>● Sinyal risiko</h4><ul class="flag-list">'+
+            ([].concat(res.criticals,rugOnly.map(x=>({label:x.label,detail:x.detail})),neg.map(c=>({label:c.label,detail:c.detail}))).slice(0,6).map(c=>'<li><i>!</i><span><b>'+esc(c.label)+'</b>'+(c.detail?' — '+esc(c.detail):'')+'</span></li>').join('')||'<li class="flag-empty">Tidak ada bendera merah besar dari data yang tersedia.</li>')+
+          '</ul></div>'+
+        '</div>'+
+        '<div class="breakdown-head"><h3>Rincian penilaian</h3><span class="mono dim" style="font-size:9.5px">bobot 35/25/18/14/8</span></div>'+
+        renderBreakdown(res)+
+        '<div class="source-row">'+
+          '<span class="src ok"><i></i>DexScreener</span>'+
+          '<span class="src '+srcClass(res.sourceStatus.goplus)+'"><i></i>GoPlus</span>'+
+          '<span class="src '+srcClass(res.sourceStatus.rug)+'"><i></i>RugCheck</span>'+
+          '<span class="stamp">dianalisis '+timeStamp()+'</span>'+
+        '</div>'+
+        (res.notes.length?'<ul class="notes">'+res.notes.map(n=>'<li>'+esc(n)+'</li>').join('')+'</ul>':'')+
+      '</div>'+
+    '</div>';
+
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function srcClass(s){
+  if(s==='ok') return 'ok';
+  if(s==='limited') return 'warn';
+  if(s==='err') return 'err';
+  return '';
+}
+
+function renderBreakdown(res){
+  return Object.keys(SECTIONS).map((key,idx)=>{
+    const s=res.sections[key];
+    const pct=Math.round(s.score*100);
+    const rows=s.checks.map(c=>{
+      const w=c.ratio===null?0:Math.round(c.ratio*100);
+      return '<div class="check">'+
+        '<div class="check-txt"><span class="c-dot '+c.status+'"></span><div><p>'+esc(c.label)+'</p><small>'+esc(c.detail)+'</small></div></div>'+
+        '<div class="c-bar"><i class="'+c.status+'" style="width:'+w+'%"></i></div>'+
+      '</div>';
+    }).join('');
+    return '<details class="sec"'+(idx===0?' open':'')+'><summary><span class="s-dot" style="background:'+colorForScore(pct)+'"></span>'+esc(s.label)+
+      '<b>'+pct+'/100 · bobot '+s.weight+'%</b><span class="chev">+</span></summary><div class="checks">'+rows+'</div></details>';
+  }).join('');
+}
+
+function buildSummary(r,res){
+  const good=res.checks.filter(c=>c.status==='good').slice(0,2).map(c=>FRIENDLY[c.id]||c.label.toLowerCase());
+  const bad=res.checks.filter(c=>c.status==='bad').slice(0,2).map(c=>c.label.toLowerCase());
+  let t='<strong>'+esc(r.symbol)+'</strong> mendapat skor <strong>'+res.score+'/100</strong> — '+esc(res.verdict.title.toLowerCase())+'. ';
+  t+='Likuiditas '+fmtUsd(r.liq)+(r.vol24!==null?', volume 24 jam '+fmtUsd(r.vol24):'')+'. ';
+  if(good.length) t+='Kekuatan: '+esc(good.join(' & '))+'. ';
+  if(bad.length) t+='Perlu diwaspadai: '+esc(bad.join(' & '))+'.';
+  else t+='Tidak ada bendera merah besar dari data yang tersedia.';
+  return t;
+}
+
+function summaryText(r,res){
+  const good=res.checks.filter(c=>c.status==='good').slice(0,3).map(c=>'- '+c.label+': '+c.detail);
+  const bad=res.checks.filter(c=>c.status==='bad').slice(0,3).map(c=>'- '+c.label+': '+c.detail);
+  return [
+    'MEMERADAR — '+r.symbol+' ('+chainInfo(r.chainId).label+')',
+    'Skor: '+res.score+'/100 · '+res.verdict.title,
+    'Harga: '+fmtPrice(r.priceUsd)+' · MC: '+fmtUsd(r.mcap||r.fdv)+' · Likuiditas: '+fmtUsd(r.liq),
+    '',
+    'SINYAL POSITIF',
+    good.length?good.join('\n'):'- (tidak ada)',
+    '',
+    'SINYAL RISIKO',
+    bad.length?bad.join('\n'):'- (tidak ada bendera besar)',
+    '',
+    r.address,
+    'Bukan nasihat keuangan. Data: DexScreener, GoPlus, RugCheck.'
+  ].join('\n');
+}
+
+/* ============================================================
+   Analyze
+   ============================================================ */
+function pairToRecord(pair){
+  const info=pair.info||{};
+  return {
+    chainId:pair.chainId,
+    dexId:pair.dexId,
+    url:pair.url||'',
+    address:pair.baseToken.address,
+    symbol:pair.baseToken.symbol||'?',
+    name:pair.baseToken.name||'',
+    quote:pair.quoteToken?pair.quoteToken.symbol:'',
+    image:info.imageUrl||'',
+    priceUsd:num(pair.priceUsd),
+    liq:num(pair.liquidity&&pair.liquidity.usd),
+    fdv:num(pair.fdv),
+    mcap:num(pair.marketCap),
+    vol24:num(pair.volume&&pair.volume.h24),
+    chg24:num(pair.priceChange&&pair.priceChange.h24),
+    ageMs:pair.pairCreatedAt?Math.max(0,Date.now()-pair.pairCreatedAt):null,
+    buys:num(pair.txns&&pair.txns.h24&&pair.txns.h24.buys),
+    sells:num(pair.txns&&pair.txns.h24&&pair.txns.h24.sells),
+    websites:(info.websites||[]).map(w=>w.url).filter(Boolean),
+    socials:(info.socials||[]).filter(x=>x&&x.url),
+    pairAddress:pair.pairAddress||''
+  };
+}
+
+async function analyze(address,chainId,skipLoading){
+  if(!address) return;
+  address=address.trim();
+  state.last={address,chainId};
+  const reqId=++state.reqId;
+  if(!skipLoading) showLoading('Mengambil data pair & likuiditas…');
+
+  try{
+    const dex=await getJSON(API.dexTokens(address),{timeout:18000,ttl:45000});
+    if(reqId!==state.reqId) return;
+    let pairs=(dex&&dex.pairs?dex.pairs:[]).filter(p=>p&&p.baseToken&&String(p.baseToken.address).toLowerCase()===address.toLowerCase());
+    if(chainId){
+      const filtered=pairs.filter(p=>p.chainId===chainId);
+      if(filtered.length) pairs=filtered;
+    }
+    if(!pairs.length){
+      if(reqId!==state.reqId) return;
+      showError('Token tidak ditemukan','Tidak ada pair likuiditas untuk alamat ini. Pastikan contract address benar dan token sudah punya pool di DEX.');
+      return;
+    }
+    pairs.sort((a,b)=>(num(b.liquidity&&b.liquidity.usd)||0)-(num(a.liquidity&&a.liquidity.usd)||0));
+    const sameChain=pairs.filter(p=>p.chainId===pairs[0].chainId);
+    const pair=sameChain[0];
+    const r=pairToRecord(pair);
+    r.pairCount=sameChain.length;
+    if(sameChain.length>1){
+      let liqSum=0,volSum=0,buys=0,sells=0,oldest=null;
+      const sites=new Map(),socials=new Map();
+      for(const p of sameChain){
+        liqSum+=num(p.liquidity&&p.liquidity.usd)||0;
+        volSum+=num(p.volume&&p.volume.h24)||0;
+        buys+=num(p.txns&&p.txns.h24&&p.txns.h24.buys)||0;
+        sells+=num(p.txns&&p.txns.h24&&p.txns.h24.sells)||0;
+        if(p.pairCreatedAt) oldest=oldest===null?p.pairCreatedAt:Math.min(oldest,p.pairCreatedAt);
+        for(const w of ((p.info&&p.info.websites)||[])) if(w&&w.url) sites.set(w.url,w);
+        for(const x of ((p.info&&p.info.socials)||[])) if(x&&x.url) socials.set(x.url,x);
+      }
+      if(liqSum) r.liq=liqSum;
+      if(volSum) r.vol24=volSum;
+      r.buys=buys; r.sells=sells;
+      if(oldest) r.ageMs=Math.max(0,Date.now()-oldest);
+      r.websites=Array.from(sites.keys());
+      r.socials=Array.from(socials.values());
+    }
+
+    setLoadText('Memeriksa keamanan kontrak & holder…');
+    const sec=await fetchSecurity(pair);
+    if(reqId!==state.reqId) return;
+
+    setLoadText('Menghitung skor & menyusun laporan…');
+    const res=scoreToken(r,sec);
+    res.sourceStatus=sec.status;
+
+    state.current={r,res};
+    if(isWatched(r)) updateWatchScore(r,res);
+
+    renderDetail(r,res);
+    try{ history.replaceState(null,'','#token='+encodeURIComponent(r.chainId)+':'+encodeURIComponent(r.address)); }catch(e){}
+  }catch(e){
+    if(reqId!==state.reqId) return;
+    console.error(e);
+    showError('Gagal mengambil data','Koneksi ke API gagal atau timeout. Cek internet, lalu coba lagi beberapa saat.');
+  }
+}
+
+/* ============================================================
+   Watchlist
+   ============================================================ */
+function watchKey(r){ return r.chainId+':'+String(r.address).toLowerCase(); }
+function loadWatch(){
+  try{
+    const raw=localStorage.getItem('memeradar.watch.v1');
+    const arr=raw?JSON.parse(raw):[];
+    return Array.isArray(arr)?arr:[];
+  }catch(e){ return []; }
+}
+function saveWatch(){
+  try{ localStorage.setItem('memeradar.watch.v1',JSON.stringify(state.watch)); }catch(e){}
+}
+function isWatched(r){
+  return state.watch.some(w=>w.key===watchKey(r));
+}
+function updateWatchScore(r,res){
+  const item=state.watch.find(w=>w.key===watchKey(r));
+  if(!item) return;
+  item.score=res.score;
+  item.verdict=res.verdict.title;
+  item.price=r.priceUsd;
+  item.ts=Date.now();
+  saveWatch();
+  renderWatch();
+}
+function toggleWatch(r,res){
+  const key=watchKey(r);
+  const i=state.watch.findIndex(w=>w.key===key);
+  if(i>=0){
+    state.watch.splice(i,1);
+    toast('Dihapus dari pantauan');
+  }else{
+    state.watch.unshift({
+      key,
+      address:r.address,
+      chainId:r.chainId,
+      symbol:r.symbol,
+      name:r.name,
+      image:r.image,
+      price:r.priceUsd,
+      score:res.score,
+      verdict:res.verdict.title,
+      ts:Date.now()
+    });
+    toast('Ditambahkan ke pantauan');
+  }
+  saveWatch();
+  renderWatch();
+  const btn=document.querySelector('[data-action="watch"]');
+  if(btn) btn.textContent=isWatched(r)?'✓ Sedang dipantau':'+ Pantau token';
+}
+function updateWatchCount(){
+  const el=$('#watchCount');
+  if(el) el.textContent=String(state.watch.length);
+}
+function renderWatch(){
+  const el=$('#watchList');
+  if(!el) return;
+  updateWatchCount();
+  if(!state.watch.length){
+    el.innerHTML='<div class="empty-line" style="grid-column:1/-1">Belum ada token dipantau. Scan token lalu tekan “+ Pantau token”.</div>';
+    return;
+  }
+  el.innerHTML=state.watch.map(w=>{
+    const ch=chainInfo(w.chainId);
+    const color=colorForScore(w.score);
+    return '<div class="watch-card" data-watch-open="'+esc(w.key)+'" role="button" tabindex="0">'+
+      (w.image?'<img class="av" src="'+esc(w.image)+'" alt="" style="object-fit:cover" onerror="this.style.display=\'none\'">':'<span class="av">'+esc((w.symbol||'?').slice(0,2))+'</span>')+
+      '<div class="watch-info"><b>'+esc(w.symbol)+'</b><small>'+esc(ch.label)+' · '+fmtPrice(w.price)+'</small></div>'+
+      '<div class="watch-score"><b style="color:'+color+'">'+w.score+'</b><span>skor</span></div>'+
+      '<button class="w-del" type="button" data-watch-del="'+esc(w.key)+'" aria-label="Hapus '+esc(w.symbol)+'">×</button>'+
+    '</div>';
+  }).join('');
+}
+function removeWatch(key){
+  const i=state.watch.findIndex(w=>w.key===key);
+  if(i>=0){
+    const sym=state.watch[i].symbol;
+    state.watch.splice(i,1);
+    saveWatch(); renderWatch();
+    toast(sym+' dihapus dari pantauan');
+  }
+}
+
+/* ============================================================
+   Radar (GeckoTerminal)
+   ============================================================ */
+function marketScore(x){
+  const liqP=x.liq>=500000?1:x.liq>=200000?0.85:x.liq>=100000?0.7:x.liq>=50000?0.55:x.liq>=20000?0.35:x.liq>=5000?0.15:0;
+  const vl=x.liq>0?x.vol/x.liq:null;
+  const volP=vl===null?0.3:vl>=0.5&&vl<=15?1:vl>=0.2&&vl<0.5?0.8:vl>15&&vl<=40?0.55:vl<0.2?0.35:0.4;
+  const ageP=x.ageH===null?0.4:x.ageH>=168?1:x.ageH>=48?0.85:x.ageH>=24?0.65:x.ageH>=6?0.4:0.2;
+  const chgP=x.chg===null?0.4:(x.chg>=-30&&x.chg<=120)?1:(x.chg>=-60&&x.chg<-30)||(x.chg>120&&x.chg<=300)?0.55:0.2;
+  const txP=x.txns>=500?1:x.txns>=150?0.8:x.txns>=50?0.6:x.txns>=10?0.35:0.15;
+  return Math.round(30*liqP+25*volP+15*ageP+15*chgP+15*txP);
+}
+
+function poolToRow(p){
+  const rel=p.relationships||{};
+  const net=rel.network&&rel.network.data?rel.network.data.id:null;
+  const chainId=GT_TO_DEX[net];
+  if(!chainId) return null;
+  const a=p.attributes||{};
+  const parts=String(a.name||'').split(' / ');
+  const symbol=parts[0]||'?';
+  if(IGNORE_SYMBOLS.has(symbol.toUpperCase())) return null;
+  const tokenId=rel.base_token&&rel.base_token.data?rel.base_token.data.id:'';
+  const address=String(tokenId).split('_').slice(1).join('_');
+  if(!address) return null;
+  const liq=num(a.reserve_in_usd)||0;
+  const vol=num(a.volume_usd&&a.volume_usd.h24)||0;
+  const ageH=a.pool_created_at?Math.max(0,(Date.now()-new Date(a.pool_created_at).getTime())/3600000):null;
+  const buys=num(a.transactions&&a.transactions.h24&&a.transactions.h24.buys)||0;
+  const sells=num(a.transactions&&a.transactions.h24&&a.transactions.h24.sells)||0;
+  const chg=num(a.price_change_percentage&&a.price_change_percentage.h24);
+  return {
+    chainId,address,symbol,liq,vol,ageH,chg,txns:buys+sells,
+    price:num(a.base_token_price_usd),
+    dex:rel.dex&&rel.dex.data?rel.dex.data.id:'',
+    score:marketScore({liq,vol,ageH,chg,txns:buys+sells})
+  };
+}
+
+async function loadRadar(force){
+  const el=$('#radarList');
+  if(!el) return;
+  el.innerHTML='<div class="radar-empty">Memuat 20 pool teratas…</div>';
+  try{
+    const data=await getJSON(API.gtTrending(),{timeout:18000,ttl:120000,force:!!force});
+    const seen=new Set();
+    const rows=[];
+    for(const p of (data.data||[])){
+      const row=poolToRow(p);
+      if(!row) continue;
+      const k=row.chainId+':'+row.address.toLowerCase();
+      if(seen.has(k)) continue;
+      seen.add(k);
+      rows.push(row);
+    }
+    state.radar=rows;
+    if(!rows.length){ el.innerHTML='<div class="radar-empty">Tidak ada pool yang cocok.</div>'; return; }
+    renderRadar();
+  }catch(e){
+    console.error(e);
+    el.innerHTML='<div class="radar-empty">Gagal memuat radar. Klik Refresh untuk coba lagi.</div>';
+  }
+}
+
+function renderRadar(){
+  const el=$('#radarList');
+  let rows=state.radar.slice();
+  if(state.radarFilter!=='all') rows=rows.filter(r=>r.chainId===state.radarFilter);
+  if(state.radarMinLiq) rows=rows.filter(r=>r.liq>=25000);
+  const sort=state.radarSort;
+  rows.sort((a,b)=>sort==='vol'?b.vol-a.vol:sort==='chg'?(b.chg===null?-1e9:b.chg)-(a.chg===null?-1e9:a.chg):sort==='liq'?b.liq-a.liq:b.score-a.score);
+  rows=rows.slice(0,20);
+  if(!rows.length){
+    el.innerHTML='<div class="radar-empty">Tidak ada pool yang lolos filter. Matikan filter likuiditas atau pilih chain lain.</div>';
+    return;
+  }
+  el.innerHTML=rows.map((r,i)=>{
+    const ch=chainInfo(r.chainId);
+    const color=colorForScore(r.score);
+    const chgCls=r.chg===null?'':(r.chg>=0?'pos':'neg');
+    return '<button type="button" class="rt-row" data-radar-addr="'+esc(r.address)+'" data-radar-chain="'+esc(r.chainId)+'">'+
+      '<span class="rt-rank">'+String(i+1).padStart(2,'0')+'</span>'+
+      '<span class="rt-token"><span class="av">'+esc((r.symbol||'?').slice(0,2))+'</span><span style="min-width:0"><b>'+esc(r.symbol)+'</b><small>'+esc(ch.label)+'</small></span></span>'+
+      '<span class="rt-num col-age">'+(r.ageH===null?'—':r.ageH>=24?Math.floor(r.ageH/24)+'d':Math.round(r.ageH)+'j')+'</span>'+
+      '<span class="rt-num col-liq">'+fmtUsd(r.liq)+'</span>'+
+      '<span class="rt-num col-vol">'+fmtUsd(r.vol)+'</span>'+
+      '<span class="rt-num col-chg '+chgCls+'">'+fmtPct(r.chg)+'</span>'+
+      '<span class="rt-score col-score"><span class="mini"><i style="width:'+r.score+'%;background:'+color+'"></i></span><b style="color:'+color+'">'+r.score+'</b></span>'+
+      '<span class="rt-go">→</span>'+
+    '</button>';
+  }).join('');
+}
+
+/* ============================================================
+   Event
+   ============================================================ */
+function bind(){
+  $('#searchForm').addEventListener('submit',e=>{
+    e.preventDefault();
+    const q=$('#q').value.trim();
+    if(!q) return;
+    if(isEVM(q)||isSolAddr(q)){ analyze(q); return; }
+    handleSearch(q);
+  });
+
+  $$('[data-quick]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      $('#q').value=b.textContent;
+      analyze(b.dataset.addr,b.dataset.chain);
+    });
+  });
+
+  resultEl().addEventListener('click',async e=>{
+    const btn=e.target.closest('[data-action]');
+    if(!btn) return;
+    const action=btn.dataset.action;
+    if(action==='retry'){
+      if(state.last) analyze(state.last.address,state.last.chainId);
+      return;
+    }
+    if(action==='pick'){
+      analyze(btn.dataset.addr,btn.dataset.chain);
+      return;
+    }
+    if(action==='copy-contract'){
+      const ok=await copyText(state.current?state.current.r.address:'');
+      toast(ok?'Contract address disalin':'Gagal menyalin');
+      return;
+    }
+    if(action==='copy-result'){
+      if(!state.current) return;
+      const ok=await copyText(summaryText(state.current.r,state.current.res));
+      toast(ok?'Ringkasan disalin':'Gagal menyalin');
+      return;
+    }
+    if(action==='watch'){
+      if(!state.current) return;
+      toggleWatch(state.current.r,state.current.res);
+    }
+  });
+
+  $('#refreshRadar').addEventListener('click',()=>loadRadar(true));
+
+  $('#chainPills').addEventListener('click',e=>{
+    const b=e.target.closest('[data-chain-filter]');
+    if(!b) return;
+    state.radarFilter=b.dataset.chainFilter;
+    $$('#chainPills .pill').forEach(p=>p.classList.toggle('on',p===b));
+    renderRadar();
+  });
+
+  $('#minLiq').addEventListener('change',e=>{
+    state.radarMinLiq=e.target.checked;
+    renderRadar();
+  });
+
+  $('#radarSort').addEventListener('change',e=>{
+    state.radarSort=e.target.value;
+    renderRadar();
+  });
+
+  $('#radarList').addEventListener('click',e=>{
+    const row=e.target.closest('[data-radar-addr]');
+    if(!row) return;
+    analyze(row.dataset.radarAddr,row.dataset.radarChain);
+  });
+
+  $('#watchList').addEventListener('click',e=>{
+    const del=e.target.closest('[data-watch-del]');
+    if(del){
+      e.stopPropagation();
+      removeWatch(del.dataset.watchDel);
+      return;
+    }
+    const card=e.target.closest('[data-watch-open]');
+    if(!card) return;
+    const item=state.watch.find(w=>w.key===card.dataset.watchOpen);
+    if(item) analyze(item.address,item.chainId);
+  });
+  $('#watchList').addEventListener('keydown',e=>{
+    if(e.key!=='Enter'&&e.key!==' ') return;
+    const card=e.target.closest('[data-watch-open]');
+    if(!card) return;
+    e.preventDefault();
+    const item=state.watch.find(w=>w.key===card.dataset.watchOpen);
+    if(item) analyze(item.address,item.chainId);
+  });
+}
+
+async function handleSearch(q){
+  showLoading('Mencari token di DexScreener…');
+  try{
+    const list=await searchTokens(q);
+    if(!list.length){
+      showError('Tidak ditemukan','Tidak ada token yang cocok dengan “'+q+'”. Coba ticker lain atau tempel contract address langsung.');
+      return;
+    }
+    if(list.length===1){
+      analyze(list[0].address,list[0].chainId);
+      return;
+    }
+    renderPicker(list,q);
+  }catch(e){
+    console.error(e);
+    showError('Pencarian gagal','Tidak bisa menghubungi DexScreener. Cek koneksi internet lalu coba lagi.');
+  }
+}
+
+function init(){
+  bind();
+  renderWatch();
+  const m=location.hash.match(/^#token=([^:]+):(.+)$/);
+  if(m){
+    const chain=decodeURIComponent(m[1]);
+    const addr=decodeURIComponent(m[2]);
+    analyze(addr,chain);
+  }
+  setTimeout(()=>loadRadar(false),350);
+}
+
+init();
+</script>
+</body>
+</html>
